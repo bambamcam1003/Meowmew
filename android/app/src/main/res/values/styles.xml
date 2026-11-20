@@ -3,7 +3,7 @@
         <item name="android:windowBackground">@color/bg</item>
         <item name="android:statusBarColor">@color/bg</item>
         <item name="android:navigationBarColor">@color/bg</item>
-        <item name="android:colorAccent">#8AB4F8</item>
+        <item name="android:colorAccent">#7AA2FF</item>
     </style>
-    <color name="bg">#121212</color>
+    <color name="bg">#0F1115</color>
 </resources>

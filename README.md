@@ -1,11 +1,11 @@
-# Meowmew
+# Dotwise
 
 A logic puzzle with a dark theme. Place one dot in every row, column and coloured
 region. Dots cannot touch, even diagonally. Every generated puzzle has exactly one
 solution (checked by the solver in `web/puzzle.js`).
 
 ## Play on Android
-Download `releases/Meowmew.apk` on your phone, open it, and allow
+Download `releases/Dotwise.apk` on your phone, open it, and allow
 "install unknown apps" for your browser/file manager when Android asks.
 
 ## Play in a browser
