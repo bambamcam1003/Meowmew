@@ -37,6 +37,14 @@ public class MainActivity extends Activity {
         else web.loadUrl("file:///android_asset/index.html");
     }
 
+    // Let the game handle the back button (game -> levels -> home); exit only from home.
+    @Override
+    public void onBackPressed() {
+        web.evaluateJavascript("window.onAndroidBack ? onAndroidBack() : false", result -> {
+            if (!"true".equals(result)) finish();
+        });
+    }
+
     @Override
     protected void onSaveInstanceState(Bundle out) {
         super.onSaveInstanceState(out);

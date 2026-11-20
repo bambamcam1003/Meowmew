@@ -7,98 +7,221 @@
 <meta name="color-scheme" content="dark">
 <title>Meowmew</title>
 <style>
-  :root { --line: #e8e8e8; --bg: #121212; --text: #eee; --panel: #1e1e1e; --muted: #aaa; }
+  :root { --line: #e8e8e8; --bg: #121212; --text: #eee; --panel: #1e1e1e; --panel2: #2a2a2a;
+          --muted: #9a9a9a; --accent: #8ab4f8; --bad: #f28b82; }
   * { box-sizing: border-box; }
-  body { margin: 0; padding: 16px; font-family: system-ui, sans-serif; background: var(--bg); color: var(--text);
-         display: flex; flex-direction: column; align-items: center; gap: 12px; }
-  h1 { margin: 0; font-size: 22px; }
-  .bar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; justify-content: center; }
-  button, select { font: inherit; padding: 8px 14px; border: 1px solid #444; border-radius: 8px; background: var(--panel); color: var(--text); cursor: pointer; }
-  button:active { background: #333; }
-  input[type=checkbox] { accent-color: #8ab4f8; }
   html { -webkit-tap-highlight-color: transparent; }
-  .status { display: flex; gap: 16px; font-size: 18px; }
-  #board { display: grid; border: 3px solid var(--line); touch-action: none; user-select: none;
-           width: min(92vw, 520px); aspect-ratio: 1; }
-  .cell { position: relative; display: flex; align-items: center; justify-content: center;
-          font-size: clamp(14px, 5vw, 30px); cursor: pointer; border: 1px solid rgba(0,0,0,.35); }
+  html, body { height: 100%; }
+  body { margin: 0; font-family: system-ui, sans-serif; background: var(--bg); color: var(--text);
+         user-select: none; -webkit-user-select: none; }
+  .screen { display: none; flex-direction: column; align-items: center; gap: 16px;
+            min-height: 100%; padding: 16px; max-width: 560px; margin: 0 auto; }
+  .screen.on { display: flex; }
+  button { font: inherit; padding: 12px 18px; border: 1px solid #3a3a3a; border-radius: 10px;
+           background: var(--panel); color: var(--text); cursor: pointer; }
+  button:active { background: #333; }
+  button.primary { background: var(--accent); color: #0b1a33; border-color: var(--accent); font-weight: 700; }
+  button.icon { padding: 8px 12px; }
+
+  /* Home */
+  #home { justify-content: center; gap: 14px; }
+  #home h1 { font-size: 44px; margin: 0 0 4px; letter-spacing: 1px; }
+  #home .sub { color: var(--muted); margin: 0 0 20px; }
+  #home button { width: min(280px, 80vw); font-size: 18px; }
+  .how { color: var(--muted); font-size: 14px; line-height: 1.5; max-width: 340px; text-align: center; margin-top: 18px; }
+
+  /* Top bar */
+  .top { width: 100%; display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+  .top h2 { margin: 0; font-size: 20px; }
+
+  /* Level select */
+  #grid { width: 100%; display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; }
+  #grid button { padding: 0; aspect-ratio: 1; font-size: 17px; display: flex; flex-direction: column;
+                 align-items: center; justify-content: center; gap: 2px; }
+  #grid button.done { background: #1f3326; border-color: #2f5a3b; }
+  #grid button.next { border-color: var(--accent); }
+  #grid button:disabled { opacity: .3; cursor: default; }
+  #grid small { font-size: 10px; color: var(--muted); }
+  .pager { display: flex; gap: 12px; align-items: center; }
+
+  /* Game */
+  .status { width: 100%; display: flex; justify-content: space-between; font-size: 17px; padding: 0 2px; }
+  #board { display: grid; border: 3px solid var(--line); touch-action: none; width: 100%; aspect-ratio: 1; }
+  .cell { display: flex; align-items: center; justify-content: center; cursor: pointer;
+          border: 1px solid rgba(0,0,0,.35); }
   .cell.bt { border-top: 3px solid var(--line); }
   .cell.bl { border-left: 3px solid var(--line); }
   .cell.wrong { animation: flash .5s; }
-  @keyframes flash { 0%,100% { background-image: none; } 50% { background-image: linear-gradient(#f005,#f005); } }
-  .x { color: rgba(255,255,255,.75); font-size: .7em; }
-  .msg { min-height: 1.4em; font-weight: 600; }
-  .rules { max-width: 520px; font-size: 14px; color: var(--muted); line-height: 1.4; }
-  label { font-size: 14px; }
+  @keyframes flash { 50% { background-image: linear-gradient(#f007, #f007); } }
+  .dot { width: 58%; height: 58%; border-radius: 50%; background: #f5f5f5; box-shadow: 0 0 0 2px #0006; }
+  .x { color: rgba(255,255,255,.75); font-size: clamp(12px, 4vw, 22px); }
+  .actions { display: flex; gap: 10px; }
+
+  /* Result popup */
+  #overlay { position: fixed; inset: 0; background: #000a; display: none; align-items: center; justify-content: center; padding: 16px; }
+  #overlay.on { display: flex; }
+  .card { background: var(--panel); border: 1px solid #333; border-radius: 14px; padding: 24px;
+          width: min(320px, 100%); text-align: center; display: flex; flex-direction: column; gap: 12px; }
+  .card h3 { margin: 0; font-size: 24px; }
+  .card p { margin: 0; color: var(--muted); }
 </style>
 </head>
 <body>
-<h1>Meowmew</h1>
 
-<div class="bar">
-  <label>Size
-    <select id="size">
-      <option>5</option><option>6</option><option>7</option><option selected>8</option><option>9</option><option>10</option>
-    </select>
-  </label>
-  <button id="new">New puzzle</button>
-  <button id="daily">Daily puzzle</button>
-  <button id="restart">Restart</button>
-</div>
-<div class="bar">
-  <label><input type="checkbox" id="hearts" checked> Hearts (3 mistakes)</label>
-  <label><input type="checkbox" id="autox"> Auto-X around cats</label>
-</div>
+<!-- Home screen -->
+<section id="home" class="screen on">
+  <h1>Meowmew</h1>
+  <p class="sub">Logic puzzle</p>
+  <button class="primary" id="continue">Play</button>
+  <button id="openLevels">Levels</button>
+  <div class="how">
+    Place one dot in every row, every column and every coloured region.
+    Dots can't touch, not even diagonally.<br><br>
+    Tap a cell: empty → ✕ → dot. Drag to mark ✕.
+    Three wrong dots and the level restarts.
+  </div>
+</section>
 
-<div class="status">
-  <span id="lives"></span>
-  <span id="cats"></span>
-  <span id="time">0:00</span>
-</div>
+<!-- Level select -->
+<section id="levels" class="screen">
+  <div class="top">
+    <button class="icon" data-go="home">← Back</button>
+    <h2>Levels</h2>
+    <span style="width:70px"></span>
+  </div>
+  <div id="grid"></div>
+  <div class="pager">
+    <button class="icon" id="prevPage">‹</button>
+    <span id="pageLabel"></span>
+    <button class="icon" id="nextPage">›</button>
+  </div>
+</section>
 
-<div id="board"></div>
-<div class="msg" id="msg"></div>
-<div class="bar">
-  <button id="hint">Hint</button>
-  <button id="reveal">Show solution</button>
-</div>
+<!-- Game -->
+<section id="game" class="screen">
+  <div class="top">
+    <button class="icon" data-go="levels">← Levels</button>
+    <h2 id="levelTitle"></h2>
+    <button class="icon" id="restart">↻</button>
+  </div>
+  <div class="status">
+    <span id="lives"></span>
+    <span id="count"></span>
+    <span id="time">0:00</span>
+  </div>
+  <div id="board"></div>
+  <div class="actions">
+    <button id="hint">Hint</button>
+  </div>
+</section>
 
-<div class="rules">
-  <b>Rules:</b> Place one 🐱 in every row, every column and every coloured region.
-  Cats can't touch each other, not even diagonally.<br>
-  <b>Controls:</b> Tap a cell to cycle empty → ✕ → 🐱. Drag across cells to mark ✕ quickly.
-  On a computer, right-click places a cat directly.
+<!-- Win / lose popup -->
+<div id="overlay">
+  <div class="card">
+    <h3 id="ovTitle"></h3>
+    <p id="ovText"></p>
+    <button class="primary" id="ovMain"></button>
+    <button id="ovAlt">Level select</button>
+  </div>
 </div>
 
 <script src="puzzle.js"></script>
 <script>
 const COLORS = ["#7a2e2e","#2e4f7a","#36662b","#7a6420","#5b3480","#21686a","#8a4a24","#4a4a4a","#5c6b1c","#7a2b5c"];
-const EMPTY = 0, MARK = 1, CAT = 2;
+const EMPTY = 0, MARK = 1, DOT = 2;
+const PER_PAGE = 25;
 const $ = id => document.getElementById(id);
 
-let puzzle, state, lives, over, startTime, timerId, dragging = null, dragMoved = false;
+// ---------- Levels ----------
+// Board size grows as you progress. Each level's puzzle is fixed (seeded by its number).
+function sizeFor(level) {
+  if (level <= 5) return 5;
+  if (level <= 15) return 6;
+  if (level <= 30) return 7;
+  if (level <= 50) return 8;
+  if (level <= 80) return 9;
+  return 10;
+}
+const cache = {};
+function puzzleFor(level) {
+  if (!cache[level]) cache[level] = Puzzle.generate(sizeFor(level), level * 7919 + 13);
+  return cache[level];
+}
 
-function newGame(seed, n) {
-  puzzle = Puzzle.generate(n, seed);
+// ---------- Saved progress ----------
+let save = { unlocked: 1, best: {} };
+try { save = Object.assign(save, JSON.parse(localStorage.getItem("meowmew") || "{}")); } catch (e) {}
+function persist() { try { localStorage.setItem("meowmew", JSON.stringify(save)); } catch (e) {} }
+
+// ---------- Screens ----------
+function show(id) {
+  document.querySelectorAll(".screen").forEach(s => s.classList.toggle("on", s.id === id));
+  $("overlay").classList.remove("on");
+  if (id === "levels") renderLevels();
+  if (id === "home") $("continue").textContent = `Play · Level ${save.unlocked}`;
+  if (id !== "game") clearInterval(timerId);
+}
+document.querySelectorAll("[data-go]").forEach(b => b.onclick = () => show(b.dataset.go));
+$("continue").onclick = () => startLevel(save.unlocked);
+$("openLevels").onclick = () => { page = Math.floor((save.unlocked - 1) / PER_PAGE); show("levels"); };
+
+// Android back button: game -> levels -> home -> exit
+window.onAndroidBack = function () {
+  if ($("overlay").classList.contains("on") || $("game").classList.contains("on")) { show("levels"); return true; }
+  if ($("levels").classList.contains("on")) { show("home"); return true; }
+  return false;
+};
+
+// ---------- Level select ----------
+let page = 0;
+function fmt(s) { return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`; }
+function renderLevels() {
+  const grid = $("grid"); grid.innerHTML = "";
+  const first = page * PER_PAGE + 1;
+  for (let lv = first; lv < first + PER_PAGE; lv++) {
+    const b = document.createElement("button");
+    const best = save.best[lv];
+    b.innerHTML = `${lv}<small>${best != null ? fmt(best) : sizeFor(lv) + "×" + sizeFor(lv)}</small>`;
+    if (best != null) b.classList.add("done");
+    if (lv === save.unlocked) b.classList.add("next");
+    b.disabled = lv > save.unlocked;
+    b.onclick = () => startLevel(lv);
+    grid.appendChild(b);
+  }
+  $("pageLabel").textContent = `${first}–${first + PER_PAGE - 1}`;
+  $("prevPage").disabled = page === 0;
+}
+$("prevPage").onclick = () => { if (page > 0) { page--; renderLevels(); } };
+$("nextPage").onclick = () => { page++; renderLevels(); };
+
+// ---------- Game ----------
+let level, puzzle, state, lives, over, startTime, timerId, dragging = null, dragMoved = false;
+
+function startLevel(lv) {
+  level = lv;
+  puzzle = puzzleFor(lv);
+  show("game");
+  $("levelTitle").textContent = `Level ${lv}`;
   restart();
+  // Prepare the next level in the background so it opens instantly.
+  setTimeout(() => puzzleFor(lv + 1), 300);
 }
 
 function restart() {
   const n = puzzle.n;
   state = Array.from({ length: n }, () => new Array(n).fill(EMPTY));
   lives = 3; over = false;
-  $("msg").textContent = "";
+  $("overlay").classList.remove("on");
   startTime = Date.now();
   clearInterval(timerId);
   timerId = setInterval(tick, 500);
   tick();
   render();
 }
+$("restart").onclick = restart;
 
-function tick() {
-  const s = Math.floor((Date.now() - startTime) / 1000);
-  $("time").textContent = `⏱ ${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
-}
+function elapsed() { return Math.floor((Date.now() - startTime) / 1000); }
+function tick() { $("time").textContent = fmt(elapsed()); }
 
 function render() {
   const n = puzzle.n, R = puzzle.regions, board = $("board");
@@ -111,78 +234,73 @@ function render() {
     if (c > 0 && R[r][c - 1] !== R[r][c]) d.classList.add("bl");
     d.style.background = COLORS[R[r][c] % COLORS.length];
     d.dataset.r = r; d.dataset.c = c;
-    d.innerHTML = state[r][c] === CAT ? "🐱" : state[r][c] === MARK ? '<span class="x">✕</span>' : "";
+    d.innerHTML = state[r][c] === DOT ? '<div class="dot"></div>' : state[r][c] === MARK ? '<span class="x">✕</span>' : "";
     board.appendChild(d);
   }
-  const placed = state.flat().filter(v => v === CAT).length;
-  $("cats").textContent = `🐱 ${placed}/${n}`;
-  $("lives").textContent = $("hearts").checked ? "❤️".repeat(lives) + "🖤".repeat(3 - lives) : "";
+  $("count").textContent = `● ${state.flat().filter(v => v === DOT).length}/${n}`;
+  $("lives").textContent = "♥".repeat(lives) + "♡".repeat(3 - lives);
+  $("lives").style.color = "var(--bad)";
 }
 
-// Check a full board against the rules (used when hearts are off).
-function solvedByRules() {
-  const n = puzzle.n, cats = [];
-  for (let r = 0; r < n; r++) for (let c = 0; c < n; c++) if (state[r][c] === CAT) cats.push([r, c]);
-  if (cats.length !== n) return false;
-  const rows = new Set(), cols = new Set(), regs = new Set();
-  for (const [r, c] of cats) { rows.add(r); cols.add(c); regs.add(puzzle.regions[r][c]); }
-  if (rows.size !== n || cols.size !== n || regs.size !== n) return false;
-  for (const [a, b] of cats) for (const [y, x] of cats)
-    if ((a !== y || b !== x) && Math.abs(a - y) <= 1 && Math.abs(b - x) <= 1) return false;
-  return true;
-}
-
-function autoX(r, c) {
-  const n = puzzle.n, g = puzzle.regions[r][c];
-  for (let y = 0; y < n; y++) for (let x = 0; x < n; x++) {
-    if (state[y][x] !== EMPTY) continue;
-    if (y === r || x === c || puzzle.regions[y][x] === g || (Math.abs(y - r) <= 1 && Math.abs(x - c) <= 1))
-      state[y][x] = MARK;
-  }
-}
-
-function placeCat(r, c) {
-  if ($("hearts").checked && puzzle.solution[r] !== c) {
+function placeDot(r, c) {
+  if (puzzle.solution[r] !== c) {
     lives--;
     state[r][c] = MARK;
     render();
-    const el = $("board").children[r * puzzle.n + c];
-    el.classList.add("wrong");
-    if (lives <= 0) {
-      over = true; clearInterval(timerId);
-      $("msg").textContent = "Out of hearts! Press Restart to try again.";
-    }
+    $("board").children[r * puzzle.n + c].classList.add("wrong");
+    if (lives <= 0) finish(false);
     return;
   }
-  state[r][c] = CAT;
-  if ($("autox").checked) autoX(r, c);
-  checkWin();
-}
-
-function checkWin() {
+  state[r][c] = DOT;
   render();
-  if (solvedByRules()) {
-    over = true; clearInterval(timerId);
-    $("msg").textContent = `Solved in ${$("time").textContent.replace("⏱ ", "")}! 🎉`;
-  }
+  if (state.every((row, r) => row[puzzle.solution[r]] === DOT)) finish(true);
 }
 
+function finish(won) {
+  over = true; clearInterval(timerId);
+  const t = elapsed();
+  if (won) {
+    const prev = save.best[level];
+    if (prev == null || t < prev) save.best[level] = t;
+    if (level >= save.unlocked) save.unlocked = level + 1;
+    persist();
+    $("ovTitle").textContent = `Level ${level} complete`;
+    $("ovText").textContent = `Time ${fmt(t)}` + (prev != null ? ` · Best ${fmt(Math.min(prev, t))}` : "");
+    $("ovMain").textContent = `Next · Level ${level + 1}`;
+    $("ovMain").onclick = () => startLevel(level + 1);
+  } else {
+    $("ovTitle").textContent = "Out of hearts";
+    $("ovText").textContent = "Three wrong dots. Try again!";
+    $("ovMain").textContent = "Retry";
+    $("ovMain").onclick = restart;
+  }
+  setTimeout(() => $("overlay").classList.add("on"), won ? 350 : 500);
+}
+$("ovAlt").onclick = () => show("levels");
+
+$("hint").onclick = () => {
+  if (over) return;
+  const rows = [...Array(puzzle.n).keys()].filter(r => state[r][puzzle.solution[r]] !== DOT);
+  const r = rows[Math.floor(Math.random() * rows.length)];
+  placeDot(r, puzzle.solution[r]);
+};
+
+// ---------- Input: tap cycles empty -> X -> dot -> empty; drag marks X ----------
 function cellFrom(e) {
   const el = document.elementFromPoint(e.clientX, e.clientY);
   return el && el.closest(".cell");
 }
-
 $("board").addEventListener("contextmenu", e => e.preventDefault());
 $("board").addEventListener("pointerdown", e => {
   if (over) return;
   const el = cellFrom(e); if (!el) return;
   const r = +el.dataset.r, c = +el.dataset.c;
-  if (e.button === 2) { if (state[r][c] !== CAT) placeCat(r, c); return; }
-  dragging = { r, c, value: state[r][c] === EMPTY ? MARK : null };
+  if (e.button === 2) { if (state[r][c] !== DOT) placeDot(r, c); return; }
+  dragging = { r, c, canDrag: state[r][c] === EMPTY };
   dragMoved = false;
 });
 $("board").addEventListener("pointermove", e => {
-  if (!dragging || over || dragging.value === null) return;
+  if (!dragging || over || !dragging.canDrag) return;
   const el = cellFrom(e); if (!el) return;
   const r = +el.dataset.r, c = +el.dataset.c;
   if (r === dragging.r && c === dragging.c && !dragMoved) return;
@@ -195,41 +313,12 @@ window.addEventListener("pointerup", () => {
   dragging = null;
   if (over) return;
   if (dragMoved) { render(); return; }
-  // Simple tap: cycle empty -> X -> cat -> empty
   if (state[r][c] === EMPTY) { state[r][c] = MARK; render(); }
-  else if (state[r][c] === MARK) placeCat(r, c);
+  else if (state[r][c] === MARK) placeDot(r, c);
   else { state[r][c] = EMPTY; render(); }
 });
 
-$("new").onclick = () => newGame(Math.floor(Math.random() * 2 ** 31), +$("size").value);
-$("daily").onclick = () => {
-  const d = new Date();
-  const seed = d.getFullYear() * 10000 + (d.getMonth() + 1) * 100 + d.getDate();
-  newGame(seed * 31 + +$("size").value, +$("size").value);
-  $("msg").textContent = `Daily puzzle for ${d.toDateString()}`;
-};
-$("restart").onclick = restart;
-$("size").onchange = $("new").onclick;
-$("hearts").onchange = render;
-$("hint").onclick = () => {
-  if (over) return;
-  // Reveal one correct cat that isn't placed yet.
-  const rows = [...Array(puzzle.n).keys()].filter(r => state[r][puzzle.solution[r]] !== CAT);
-  if (!rows.length) return;
-  const r = rows[Math.floor(Math.random() * rows.length)];
-  // Remove any wrong cat in that row first.
-  for (let c = 0; c < puzzle.n; c++) if (state[r][c] === CAT) state[r][c] = EMPTY;
-  placeCat(r, puzzle.solution[r]);
-};
-$("reveal").onclick = () => {
-  const n = puzzle.n;
-  state = Array.from({ length: n }, (_, r) => Array.from({ length: n }, (_, c) => puzzle.solution[r] === c ? CAT : EMPTY));
-  over = true; clearInterval(timerId);
-  render();
-  $("msg").textContent = "Solution shown.";
-};
-
-$("new").onclick();
+show("home");
 </script>
 </body>
 </html>

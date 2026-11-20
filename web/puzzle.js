@@ -1,6 +1,6 @@
 // Puzzle logic: generation + solving. No DOM code here, so it can be tested in Node.
-// Rules: an N x N grid is split into N regions. Place N cats so that every row,
-// every column and every region has exactly one cat, and no two cats touch
+// Rules: an N x N grid is split into N regions. Place N dots so that every row,
+// every column and every region has exactly one dot, and no two dots touch
 // (including diagonally).
 
 (function (root) {
@@ -24,7 +24,7 @@
     return arr;
   }
 
-  // Random valid cat layout: cols[r] = column of the cat in row r.
+  // Random valid dot layout: cols[r] = column of the dot in row r.
   // Needs distinct columns and |cols[r] - cols[r+1]| > 1 (no diagonal touch).
   function randomSolution(n, rng) {
     const cols = [];
@@ -45,7 +45,7 @@
     return place(0) ? cols : null;
   }
 
-  // Grow N regions outward from the cat cells until the grid is filled.
+  // Grow N regions outward from the dot cells until the grid is filled.
   function growRegions(n, cols, rng) {
     const regions = Array.from({ length: n }, () => new Array(n).fill(-1));
     const frontier = [];
@@ -152,7 +152,7 @@
 
   // Generate a puzzle with exactly one solution.
   // Grow random regions, then repeatedly break any alternate solution by moving
-  // one of its cat cells into a neighbouring region.
+  // one of its dot cells into a neighbouring region.
   function generate(n, seed) {
     const rng = makeRng(seed);
     for (let attempt = 1; attempt <= 500; attempt++) {
@@ -162,7 +162,7 @@
       for (let fix = 0; fix < n * n * 4; fix++) {
         const other = findOther(regions, cols);
         if (!other) return { n, regions, solution: cols, attempts: attempt };
-        // Cells where the alternate solution puts a cat but the real one doesn't.
+        // Cells where the alternate solution puts a dot but the real one doesn't.
         const cells = shuffle(
           other.map((c, r) => [r, c]).filter(([r, c]) => cols[r] !== c),
           rng
