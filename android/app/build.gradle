@@ -1,0 +1,26 @@
+plugins { id 'com.android.application' }
+
+android {
+    namespace 'com.meowmew.game'
+    compileSdk 35
+    defaultConfig {
+        applicationId 'com.meowmew.game'
+        minSdk 26
+        targetSdk 35
+        versionCode 1
+        versionName '1.0'
+    }
+    // The game itself lives in ../../web and is bundled as app assets.
+    sourceSets { main { assets.srcDirs = ['../../web'] } }
+    buildTypes {
+        release {
+            minifyEnabled false
+            // Signed with the debug key so the APK installs without extra setup.
+            signingConfig signingConfigs.debug
+        }
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+}

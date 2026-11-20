@@ -1,6 +1,22 @@
 # Meowmew
 
-A cat logic puzzle. Open `index.html` in a browser to play (no build step).
+A cat logic puzzle with a dark theme. Place one cat in every row, column and coloured
+region. Cats cannot touch, even diagonally. Every generated puzzle has exactly one
+solution (checked by the solver in `web/puzzle.js`).
 
-Place one cat in every row, column and coloured region. Cats cannot touch, even diagonally.
-Every generated puzzle has exactly one solution (checked by the solver in `puzzle.js`).
+## Play on Android
+Download `releases/Meowmew.apk` on your phone, open it, and allow
+"install unknown apps" for your browser/file manager when Android asks.
+
+## Play in a browser
+Open `web/index.html`. No build step.
+
+## Rebuild the APK
+Needs JDK 17+ and the Android SDK (platform 35):
+
+    cd android
+    ./gradlew assembleRelease
+    # output: android/app/build/outputs/apk/release/app-release.apk
+
+The Android app is a tiny WebView wrapper; the game itself is the `web/` folder,
+bundled into the APK so it works offline.
